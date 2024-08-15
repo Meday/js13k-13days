@@ -1,0 +1,16 @@
+{
+  "name": "13days",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "js13k-2d": "^0.8.0",
+    "rollup": "^4.20.0",
+    "vite": "^5.4.1"
+  }
+}
