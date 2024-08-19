@@ -1,4 +1,6 @@
 import Renderer from './renderer.js';
+import { TILE_SIZE, MAP_POS, scene, addTile, Vec2, SCALE, } from './utils.js';
+import { getActors, resetActors, addPeon } from './actor.js';
 
 const { Point, Sprite } = Renderer;
 
@@ -6,7 +8,7 @@ const stats = new Stats();
 document.body.appendChild(stats.dom);
 
 const view = document.getElementById('view');
-const scene = Renderer(view, { scale: 1.0/3.0 });
+
 const { gl } = scene;
 console.log(gl);
 
@@ -16,19 +18,10 @@ scene.camera.at.set(0, 0);
 scene.camera.to.set(0);
 
 let tileAtlasImage = new Image();
-tileAtlasImage.src="src/atlas.png";
-
-class Vec2 extends Point {
-  add(vec) {
-    return new Vec2(vec.x + this.x, vec.y + this.y);
-  }
-}
-
-const TILE_SIZE = 8;
-const MAP_POS   = new Vec2(8, 8);
+tileAtlasImage.src = "src/atlas.png";
 
 const gameStart = () => {
-  
+
   const tileAtlasTexture = scene.texture(tileAtlasImage, 1);
   // tileAtlasTexture.anchor = new Point(0.5);
 
@@ -78,22 +71,13 @@ const gameStart = () => {
     ".TTTTT........................",
   ];
 
-  const MAP_SIZE  = new Vec2(InitialMap[0].length, InitialMap.length);
-
-  const addTile = (layer, tile, x, y) => {
-    const sprite = new Sprite(tile.frame);
-    const tile_pos = new Vec2(x * TILE_SIZE + MAP_POS.x, y * TILE_SIZE + MAP_POS.y);
-
-    sprite.position.set(tile_pos.x , tile_pos.y);
-
-    layer.add(sprite);
-  }
+  const MAP_SIZE = new Vec2(InitialMap[0].length, InitialMap.length);
 
   const map_layer_base = scene.layer(0);
   const map_layer_top = scene.layer(1);
 
   const mud_tiles = [TILE_MUD_0, TILE_MUD_1, TILE_MUD_2];
-  
+
   for (let y = 0; y < MAP_SIZE.y; y++) {
     for (let x = 0; x < MAP_SIZE.x; x++) {
 
@@ -101,35 +85,30 @@ const gameStart = () => {
 
       let tile;
 
-      if (c == '.')
-      {
+      if (c == '.') {
         tile = mud_tiles[Math.floor(Math.random() * mud_tiles.length)];
       }
-      else if (c == 't')
-      {
+      else if (c == 't') {
         tile = TILE_TREE_SMALL;
       }
-      else if (c == 'T')
-      {
-        // If there's another tree below (or it's the bottom of the map), then it's a middle 
-        if (y == MAP_SIZE.y - 1 || InitialMap[y + 1][x] == 'T')
-        {
+      else if (c == 'T') {
+        // If there's another tree below (or it's the bottom of the map), then it's a middle
+        if (y == MAP_SIZE.y - 1 || InitialMap[y + 1][x] == 'T') {
           tile = TILE_TREE_MIDDLE;
 
           // If there isn't another tree above, add a tree top there.
-          if (y > 0 && InitialMap[y - 1][x] != 'T')
-          {
-            addTile(map_layer_top, TILE_TREE_TOP, x, y - 1);
+          if (y > 0 && InitialMap[y - 1][x] != 'T') {
+            const pos_x = x * TILE_SIZE + MAP_POS.x;
+            const pos_y = y * TILE_SIZE + MAP_POS.y - 1;
+            addTile(map_layer_top, TILE_TREE_TOP, pos_x, pos_y);
           }
         }
-        else
-        {
+        else {
           tile = TILE_TREE_BOTTOM;
         }
       }
-      else if (c == 'c')
-      {
-        const isTop  = y < (MAP_SIZE.y - 1) && InitialMap[y + 1][x] == 'c';
+      else if (c == 'c') {
+        const isTop = y < (MAP_SIZE.y - 1) && InitialMap[y + 1][x] == 'c';
         const isLeft = x < (MAP_SIZE.x - 1) && InitialMap[y][x + 1] == 'c';
 
         if (isTop)
@@ -138,8 +117,11 @@ const gameStart = () => {
           tile = isLeft ? TILE_CASTLE_BL : TILE_CASTLE_BR;
       }
 
-      if (tile)
-        addTile(map_layer_base, tile, x, y);
+      if (tile) {
+        const pos_x = x * TILE_SIZE + MAP_POS.x;
+        const pos_y = y * TILE_SIZE + MAP_POS.y;
+        addTile(map_layer_base, tile, pos_x, pos_y);
+      }
     }
   }
 
@@ -165,8 +147,57 @@ const gameStart = () => {
     add = false;
   };
 
-  const gameLoop = () => {
+  view.onclick = (e) => {
+    const actorsList = getActors();
+    var rect = view.getBoundingClientRect();
+    const mousePos = {
+      x: (e.clientX - rect.left) / SCALE - TILE_SIZE / 2,
+      y: (e.clientY - rect.top) / SCALE - TILE_SIZE / 2
+    };
+
+    // check if click on actor
+    for (const actor of actorsList) {
+      if (mousePos.x >= actor.pos.x && mousePos.x < actor.pos.x + actor.size.w &&
+        mousePos.y >= actor.pos.y && mousePos.y < actor.pos.y + actor.size.h) {
+        actor.selected(!actor.isSelected);
+      } else if (actor.isSelected) {
+        actor.moveTo(mousePos.x, mousePos.y);
+      }
+    }
+  };
+
+  document.onkeydown = (e) => {
+    switch (e.key) {
+      case 'r':
+        const actorsList = getActors();
+        const peon = actorsList[0];
+        peon.sprite.remove();
+        resetActors();
+        break;
+      case 'p':
+        addPeon(96, 96);
+      default:
+        break;
+    }
+  };
+
+  let start;
+  let previous = 0;
+  const gameLoop = (timeStamp) => {
+    if (start === undefined) {
+      start = timeStamp;
+    }
+    const elapsed = timeStamp - start;
     stats.begin();
+
+    if (timeStamp - previous > 100) {
+      // console.log(elapsed);
+      previous = timeStamp;
+
+      for (const actor of getActors()) {
+        actor.update();
+      }
+    }
 
     scene.render();
     stats.end();
@@ -174,7 +205,7 @@ const gameStart = () => {
     requestAnimationFrame(gameLoop);
   };
 
-  gameLoop();
+  requestAnimationFrame(gameLoop);
 }
 
 tileAtlasImage.onload = gameStart;
