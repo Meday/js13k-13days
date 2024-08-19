@@ -325,6 +325,8 @@ const Renderer = (canvas, options) => {
         GL_TEXTURE_MIN_FILTER,
         GL_NEAREST | +smooth | (+mipmap << 8) | (+mipmap << 1),
       );
+      gl.texParameteri(GL_TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(GL_TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, source);
       mipmap && gl.generateMipmap(GL_TEXTURE_2D);
 
