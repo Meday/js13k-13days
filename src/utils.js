@@ -30,16 +30,23 @@ class Tile {
         this.frame = texture.frame(new Point(tileX * TILE_SIZE, tileY * TILE_SIZE), new Point(TILE_SIZE, TILE_SIZE));
     }
 }
-
+const textures = [];
 export const getTile = (src, sx, sy) =>
     new Promise(resolve => {
-        const image = new Image;
-        image.onerror = image.onload = () => {
-            const texture = scene.texture(image, 1);
-            const tile = new Tile(texture, sx, sy);
+        if (textures[src]) {
+            const tile = new Tile(textures[src], sx, sy);
             resolve(tile);
+            return;
+        } else {
+            const image = new Image;
+            image.onerror = image.onload = () => {
+                const texture = scene.texture(image, 1);
+                textures[src] = texture;
+                const tile = new Tile(texture, sx, sy);
+                resolve(tile);
+            }
+            image.src = src;
         }
-        image.src = src;
     });
 
 

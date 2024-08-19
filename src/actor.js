@@ -24,6 +24,7 @@ export class Actor {
         this.img = img;
         this.sprite = null;
         this.status = null;
+        this.speed = 10;
         this.isSelected = false;
     }
 
@@ -34,14 +35,14 @@ export class Actor {
         }
     }
 
-    update() {
+    update(deltatime) {
         // Do nothing
     }
 }
 
 export class Peon extends Actor {
     constructor(x, y) {
-        super(x, y, 'src/Sprites/GoldMine.png');
+        super(x, y, 'src/Sprites/Peasant.png');
         this.status = STATUS_IDLE;
         this.target = { x, y };
 
@@ -56,7 +57,7 @@ export class Peon extends Actor {
         this.status = STATUS_MOVING;
     }
 
-    update() {
+    update(deltatime) {
         if (this.status === STATUS_MOVING) {
             // Move towards target
             let dx = this.target.x - this.pos.x;
@@ -86,8 +87,8 @@ export class Peon extends Actor {
                 this.status = STATUS_IDLE;
                 this.sprite.position.set(this.pos.x, this.pos.y);
             } else {
-                this.pos.x += dx / dist;
-                this.pos.y += dy / dist;
+                this.pos.x += dx / dist * this.speed * deltatime;
+                this.pos.y += dy / dist * this.speed * deltatime;
                 this.sprite.position.set(this.pos.x, this.pos.y);
             }
         }
