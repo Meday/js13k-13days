@@ -24,8 +24,8 @@ export const addTile = (layer, tile, x, y) => {
 }
 
 const textures = [];
-export async function loadTexture(src) {
-    return await new Promise(resolve => {
+export function loadTexture(src) {
+    return new Promise(resolve => {
         if (textures[src]) {
             resolve(textures[src]);
             return;
