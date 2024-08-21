@@ -1,10 +1,10 @@
-import { TILE_SIZE, getTile, addTile, scene } from "./utils";
+import { TILE_SIZE, addTile, scene, AnimResource, Anim, Vec2 } from "./utils";
 import Renderer from './renderer.js';
 
 const { Point, Sprite } = Renderer;
 
-const STATUS_IDLE = 'idle';
-const STATUS_MOVING = 'moving';
+const STATE_IDLE = 'idle';
+const STATE_MOVING = 'moving';
 
 const FACE_UP = 'up';
 const FACE_DOWN = 'down';
@@ -17,15 +17,21 @@ export const getActors = () => actorsList;
 export const resetActors = () => actorsList = [];
 
 export class Actor {
-    constructor(x, y, img) {
-        this.pos = { x: x, y: y };
-        this.size = { w: TILE_SIZE, h: TILE_SIZE };
+    constructor(x, y, anims) {
         this.direction = FACE_DOWN;
-        this.img = img;
         this.sprite = null;
-        this.status = null;
+        this.state = null;
         this.speed = 10;
         this.isSelected = false;
+        this.anims = anims;
+    }
+    
+    get size() {
+        return this.sprite.frame.size;
+    }
+
+    get pos() {
+        return this.sprite.position;
     }
 
     selected(value = true) {
@@ -38,27 +44,88 @@ export class Actor {
     update(deltatime) {
         // Do nothing
     }
+
+    
+    getAnimResource() {
+
+        // Idle doesn't have directions
+        if (this.state == STATE_IDLE)
+            return this.anims[STATE_IDLE];
+
+        // If this state doesn't have anims, fall back to idle
+        const state_anims = this.anims[this.state];
+        if (state_anims == null)
+            return this.anims[STATE_IDLE];
+
+        // If this direction doesn't have anims, fall back to idle
+        const anim = state_anims[this.direction];
+        if (anim == null)
+            return this.anims[STATE_IDLE];
+
+        return anim;
+    }
+
+    setState(new_state) {
+        if (this.state == new_state)
+            return;
+
+        this.state = new_state;
+        this.currAnim = new Anim(this.getAnimResource(), this.sprite);
+    }
+
+    setDirection(new_dir) {
+        if (this.direction == new_dir)
+            return;
+
+        this.direction = new_dir;
+        this.currAnim = new Anim(this.getAnimResource(), this.sprite);
+    }
 }
+
+
+let spriteY = 32;
+const VILLAGER_IDLE     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
+const VILLAGER_LEFT     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
+const VILLAGER_UP       = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
+const VILLAGER_DOWN     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
+const VILLAGER_HIT      = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
+const VILLAGER_DIE      = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 4, { loop : false });
 
 export class Peon extends Actor {
     constructor(x, y) {
-        super(x, y, 'src/Sprites/Peasant.png');
-        this.status = STATUS_IDLE;
+        let move_anims = [];
+        move_anims[FACE_UP   ] = VILLAGER_UP;
+        move_anims[FACE_DOWN ] = VILLAGER_DOWN;
+        move_anims[FACE_LEFT ] = VILLAGER_LEFT;
+        move_anims[FACE_RIGHT] = VILLAGER_LEFT;
+
+        let anims = [];
+        anims[STATE_IDLE] = VILLAGER_IDLE;
+        anims[STATE_MOVING] = move_anims;
+
+        super(x, y, anims);
+
+        this.sprite = new Sprite(this.anims[STATE_IDLE].frames[0]);
+        this.sprite.position.set(x, y);
+
+        this.setState(STATE_IDLE);
         this.target = { x, y };
 
-        getTile(this.img, 0, 0).then((tile) => {
-            this.sprite = addTile(scene.layer(2), tile, x, y);
-        });
+        scene.layer(2).add(this.sprite);
     }
 
     moveTo(x, y) {
         this.target.x = x;
         this.target.y = y;
-        this.status = STATUS_MOVING;
+        this.setState(STATE_MOVING);
+        this.update(0); // To make sure direction is updated.
     }
 
-    update(deltatime) {
-        if (this.status === STATUS_MOVING) {
+    update(deltaTime) {
+        if (this.currAnim)
+            this.currAnim.update(deltaTime);
+
+        if (this.state === STATE_MOVING) {
             // Move towards target
             let dx = this.target.x - this.pos.x;
             let dy = this.target.y - this.pos.y;
@@ -66,33 +133,35 @@ export class Peon extends Actor {
             // Calculate direction
             if (Math.abs(dx) > Math.abs(dy)) {
                 if (dx > 0) {
-                    console.log(FACE_RIGHT);
+                    this.setDirection(FACE_RIGHT);
                 } else {
-                    console.log(FACE_LEFT);
+                    this.setDirection(FACE_LEFT);
                 }
             } else {
                 if (dy > 0) {
-                    console.log(FACE_DOWN);
+                    this.setDirection(FACE_DOWN);
                 } else {
-                    console.log(FACE_UP);
+                    this.setDirection(FACE_UP);
                 }
             }
-
-            // Calulate distance
+            console.log(this.direction);
+            
+            // Calculate distance
             let dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 1) {
                 this.pos.x = this.target.x;
                 this.pos.y = this.target.y;
-                this.status = STATUS_IDLE;
+                this.setState(STATE_IDLE);
                 this.sprite.position.set(this.pos.x, this.pos.y);
             } else {
-                this.pos.x += dx / dist * this.speed * deltatime;
-                this.pos.y += dy / dist * this.speed * deltatime;
+                this.pos.x += dx / dist * this.speed * deltaTime;
+                this.pos.y += dy / dist * this.speed * deltaTime;
                 this.sprite.position.set(this.pos.x, this.pos.y);
             }
         }
     }
+
 }
 
 export function addPeon(x, y) {

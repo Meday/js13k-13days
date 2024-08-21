@@ -25,28 +25,82 @@ export const addTile = (layer, tile, x, y) => {
     return sprite;
 }
 
-class Tile {
-    constructor(texture, tileX, tileY) {
-        this.frame = texture.frame(new Point(tileX * TILE_SIZE, tileY * TILE_SIZE), new Point(TILE_SIZE, TILE_SIZE));
-    }
-}
 const textures = [];
-export const getTile = (src, sx, sy) =>
-    new Promise(resolve => {
+export async function loadTexture(src) {
+    return await new Promise(resolve => {
         if (textures[src]) {
-            const tile = new Tile(textures[src], sx, sy);
-            resolve(tile);
+            resolve(textures[src]);
             return;
         } else {
             const image = new Image;
             image.onerror = image.onload = () => {
                 const texture = scene.texture(image, 1);
                 textures[src] = texture;
-                const tile = new Tile(texture, sx, sy);
-                resolve(tile);
+                resolve(texture);
             }
             image.src = src;
         }
     });
+}
+
+const atlasTexture = await loadTexture("src/atlas.png");
+
+export class TileResource {
+    constructor(tileX, tileY) {
+        this.frame = atlasTexture.frame(new Point(tileX * TILE_SIZE, tileY * TILE_SIZE), new Point(TILE_SIZE, TILE_SIZE));
+    }
+}
+
+export class AnimResource {
+    constructor(origin, size, numFrames, options) {
+        if (options == null)
+            options = {};
+
+        this.frames = Array(numFrames);
+
+        for (let f = 0; f < numFrames; f++) {
+            this.frames[f] = atlasTexture.frame(origin, size);
+
+            // Frames are next to each other horizontally
+            origin.x += size.x;
+        }
+
+        // All frames are 100ms by default
+        this.frameDurations = Array(numFrames);
+        this.frameDurations.fill(options.frameDuration || 0.1)
+
+        this.loop = options.loop || true;
+        this.numFrames = numFrames;
+    }
+}
+
+export class Anim {
+    constructor(resource, sprite) {
+        this.resource = resource;
+        this.currFrame = 0;
+        this.currTime = 0;
+        this.sprite = sprite;
+        this.sprite.frame = this.resource.frames[0];
+    }
+
+    nextFrame() {
+        if (this.currFrame < this.resource.numFrames - 1)
+            this.currFrame++;
+        else if (this.resource.loop)
+            this.currFrame = 0;
+
+        this.sprite.frame = this.resource.frames[this.currFrame];
+    }
+
+    update(deltaTime) {
+        this.currTime += deltaTime;
+
+        while (this.currTime > this.resource.frameDurations[this.currFrame])
+        {
+            this.currTime -= this.resource.frameDurations[this.currFrame];
+            this.nextFrame();
+        }
+    }
+}
 
 
