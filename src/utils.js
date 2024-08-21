@@ -52,9 +52,7 @@ export class TileResource {
 }
 
 export class AnimResource {
-    constructor(origin, size, numFrames, options) {
-        if (options == null)
-            options = {};
+    constructor(origin, size, numFrames, options = {}) {
 
         this.flipX = options.flipX || false;
         this.flipY = options.flipY || false;
