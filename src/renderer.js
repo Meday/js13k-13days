@@ -208,8 +208,8 @@ const Renderer = (canvas, options) => {
   let alphaTestMode;
 
   const resize = () => {
-    width = canvas.clientWidth * scale | 0;
-    height = canvas.clientHeight * scale | 0;
+    width = canvas.clientWidth | 0;
+    height = canvas.clientHeight | 0;
 
     const change = canvas.width !== width || canvas.height !== height;
 
@@ -358,7 +358,7 @@ const Renderer = (canvas, options) => {
 
     render() {
       resize();
-
+      /*
       const { at, to, angle } = renderer.camera;
 
       const x = at.x - width * to.x;
@@ -369,7 +369,7 @@ const Renderer = (canvas, options) => {
 
       const w = 2 / width;
       const h = -2 / height;
-
+      */
       /*
 
       |   1 |    0| 0| 0|
@@ -399,7 +399,7 @@ const Renderer = (canvas, options) => {
       | -2x/width-1| 2y/height+1|        0| 1|
 
       */
-
+      /*
       // prettier-ignore
       const projection = [
         c * w, s * h, 0, 0,
@@ -410,6 +410,32 @@ const Renderer = (canvas, options) => {
         (at.y * (1 - c) - at.x * s) * h + 2 * y / height + 1,
         0, 1,
       ];
+      */
+
+      const createOrthographic = function (left, right, bottom, top, near, far) {
+        var m = new Array(16);
+
+        var widthRatio  = 1.0 / (right - left);
+        var heightRatio = 1.0 / (top - bottom);
+        var depthRatio  = 1.0 / (far - near);
+
+        var sx = 2 * widthRatio;
+        var sy = 2 * heightRatio;
+        var sz = -2 * depthRatio;
+
+        var tx = -(right + left) * widthRatio;
+        var ty = -(top + bottom) * heightRatio;
+        var tz = -(far + near) * depthRatio;
+
+        m[0] = sx;  m[4] = 0;   m[8] = 0;   m[12] = tx;
+        m[1] = 0;   m[5] = sy;  m[9] = 0;   m[13] = ty;
+        m[2] = 0;   m[6] = 0;   m[10] = sz; m[14] = tz;
+        m[3] = 0;   m[7] = 0;   m[11] = 0;  m[15] = 1;
+
+        return m;
+      };
+
+      let projection = createOrthographic(0, width * scale, height * scale, 0, -100, 100);
 
       gl.useProgram(program);
       gl.enable(GL_BLEND);
