@@ -16,13 +16,11 @@ export const scene = Renderer(view, { scale: 1.0 / SCALE });
 
 export const addTile = (layer, tile, x, y) => {
     const sprite = new Sprite(tile.frame);
-    const tile_pos = new Vec2(x, y);
+    const tile_pos = new Vec2(x * TILE_SIZE + MAP_POS.x, y * TILE_SIZE + MAP_POS.y);
 
-    sprite.position.set(tile_pos.x, tile_pos.y);
+    sprite.position.set(tile_pos.x , tile_pos.y);
 
     layer.add(sprite);
-
-    return sprite;
 }
 
 const textures = [];

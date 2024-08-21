@@ -86,9 +86,7 @@ for (let y = 0; y < MAP_SIZE.y; y++) {
 
                 // If there isn't another tree above, add a tree top there.
                 if (y > 0 && InitialMap[y - 1][x] != 'T') {
-                    const pos_x = x * TILE_SIZE + MAP_POS.x;
-                    const pos_y = y * TILE_SIZE + MAP_POS.y - 1;
-                    addTile(map_layer_top, TILE_TREE_TOP, pos_x, pos_y);
+                    addTile(map_layer_top, TILE_TREE_TOP, x, y - 1);
                 }
             }
             else {
@@ -106,9 +104,7 @@ for (let y = 0; y < MAP_SIZE.y; y++) {
         }
 
         if (tile) {
-            const pos_x = x * TILE_SIZE + MAP_POS.x;
-            const pos_y = y * TILE_SIZE + MAP_POS.y;
-            addTile(map_layer_base, tile, pos_x, pos_y);
+            addTile(map_layer_base, tile, x, y);
         }
     }
 }
