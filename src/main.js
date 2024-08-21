@@ -139,8 +139,8 @@ view.onclick = (e) => {
     const actorsList = getActors();
     var rect = view.getBoundingClientRect();
     const mousePos = {
-        x: (e.clientX - rect.left) / SCALE - TILE_SIZE / 2,
-        y: (e.clientY - rect.top) / SCALE - TILE_SIZE / 2
+        x: (e.clientX - rect.left) / SCALE,
+        y: (e.clientY - rect.top) / SCALE
     };
 
     // check if click on actor
