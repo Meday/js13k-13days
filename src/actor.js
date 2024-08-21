@@ -85,7 +85,8 @@ export class Actor {
 
 let spriteY = 32;
 const VILLAGER_IDLE     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
-const VILLAGER_LEFT     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
+const VILLAGER_LEFT     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8);
+const VILLAGER_RIGHT    = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8, { flipX : true }); spriteY += 9;
 const VILLAGER_UP       = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
 const VILLAGER_DOWN     = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
 const VILLAGER_HIT      = new AnimResource(new Vec2(0, spriteY), new Vec2(9), 8); spriteY += 9;
@@ -97,7 +98,7 @@ export class Peon extends Actor {
         move_anims[FACE_UP   ] = VILLAGER_UP;
         move_anims[FACE_DOWN ] = VILLAGER_DOWN;
         move_anims[FACE_LEFT ] = VILLAGER_LEFT;
-        move_anims[FACE_RIGHT] = VILLAGER_LEFT;
+        move_anims[FACE_RIGHT] = VILLAGER_RIGHT;
 
         let anims = [];
         anims[STATE_IDLE] = VILLAGER_IDLE;

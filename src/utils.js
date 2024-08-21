@@ -56,13 +56,27 @@ export class AnimResource {
         if (options == null)
             options = {};
 
+        this.flipX = options.flipX || false;
+        this.flipY = options.flipY || false;
+
         this.frames = Array(numFrames);
 
         for (let f = 0; f < numFrames; f++) {
-            this.frames[f] = atlasTexture.frame(origin, size);
+            let frame = atlasTexture.frame(origin, size);
+            this.frames[f] = frame;
 
             // Frames are next to each other horizontally
             origin.x += size.x;
+
+            if (this.flipX) {
+                frame.uvs[0] = frame.uvs[0] + frame.uvs[2];
+                frame.uvs[2] = -frame.uvs[2];
+            }
+
+            if (this.flipY) {
+                frame.uvs[1] = frame.uvs[1] + frame.uvs[3];
+                frame.uvs[3] = -frame.uvs[3];
+            }
         }
 
         // All frames are 100ms by default
