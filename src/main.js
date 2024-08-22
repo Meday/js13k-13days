@@ -1,8 +1,7 @@
 import Renderer from './renderer.js';
-import { TILE_SIZE, MAP_POS, scene, addTile, Vec2, SCALE, TileResource } from './utils.js';
+import { scene, addTile, Vec2, SCALE, TileResource } from './utils.js';
 import { getActors, resetActors, addPeon } from './actor.js';
-
-const { Point, Sprite } = Renderer;
+import Stats from 'stats.js';
 
 const stats = new Stats();
 document.body.appendChild(stats.dom);
@@ -61,7 +60,7 @@ const InitialMap = [
     ".TTTTT........................",
 ];
 
-const MAP_SIZE = new Vec2(InitialMap[0].length, InitialMap.length);  
+const MAP_SIZE = new Vec2(InitialMap[0].length, InitialMap.length);
 
 
 const mud_tiles = [TILE_MUD_0, TILE_MUD_1, TILE_MUD_2];

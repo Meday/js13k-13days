@@ -32,8 +32,14 @@ bun dev
 
 ### Compile for production
 
-TODO : minify + zip
+```
+bunx vite build
+```
+Result in /dist
+
+### Try minified game
 
 ```
-bun build
+bun prod
 ```
+Open browser on http://localhost:3000

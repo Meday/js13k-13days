@@ -1,4 +1,5 @@
 import Renderer from './renderer.js';
+import atlas from './atlas.png'
 
 const { Point, Sprite } = Renderer;
 
@@ -31,6 +32,7 @@ export function loadTexture(src) {
             return;
         } else {
             const image = new Image;
+            image.crossOrigin = "anonymous";
             image.onerror = image.onload = () => {
                 const texture = scene.texture(image, 1);
                 textures[src] = texture;
@@ -40,8 +42,8 @@ export function loadTexture(src) {
         }
     });
 }
-
-const atlasTexture = await loadTexture("src/atlas.png");
+console.log(atlas);
+const atlasTexture = await loadTexture(atlas);
 
 export class TileResource {
     constructor(tileX, tileY) {
